@@ -1,0 +1,15 @@
+__pycache__
+.venv
+.vscode/
+.cursor/rules/**
+build
+*egg-info
+logs/
+
+*.pkl
+
+pycalib/data/**
+pycalib/results/**
+third_party/**
+tests/**
+instructions/**
