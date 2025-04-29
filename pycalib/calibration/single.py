@@ -235,9 +235,7 @@ def print_calib_results(results: dict):
 
 
 if __name__ == "__main__":
-    """
-    Camera calibration test
-    """
+    
     use_filtered_data = True
     if use_filtered_data:
         cam_features = Path("pycalib/data/cache/filtered_cam_feature_data.pkl")

@@ -10,13 +10,15 @@ import numpy as np
 def visualize_extrinsics_camera_centered(
     calib_results_path,
     feature_data_path,
+    img_width,
+    img_height,
     figsize=(10, 8),
     elevation=-54,
     azimuth=-48,
     roll=-47,
     point_color="blue",
     point_size=5,
-    camera_scale=1.0,
+    camera_scale=3.0,
 ):
     """
     Visualize object points transformed into the camera coordinate system.
@@ -40,7 +42,6 @@ def visualize_extrinsics_camera_centered(
         feature_data = pickle.load(f)
 
     all_points_in_cam_frame = []
-    debug_printed = False
 
     for frame_id in feature_data:
         frame_features = feature_data[frame_id]
@@ -67,7 +68,13 @@ def visualize_extrinsics_camera_centered(
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111, projection="3d")
 
-    _draw_camera_origin(ax, scale=camera_scale, label=f"{cam_name} Frame")
+    _draw_camera_origin(
+        ax,
+        scale=camera_scale,
+        label=f"{cam_name} Frame",
+        width=img_width,
+        height=img_height,
+    )
 
     ax.scatter(
         all_points_np[:, 0],
@@ -113,17 +120,30 @@ def visualize_extrinsics_camera_centered(
     plt.show()
 
 
-def _draw_camera_origin(ax, scale=1.0, label="Camera Frame"):
+def _draw_camera_origin(ax, scale=1.0, label="Camera Frame", width=None, height=None):
     """
     Draw a reference camera and coordinate axes at the origin (0,0,0).
     """
+    # Calculate aspect ratio, default to 1.0 if width/height are not provided or invalid
+    aspect_ratio = 1.0
+    if width and height and width > 0 and height > 0:
+        aspect_ratio = width / height
+    else:
+        print(
+            "Warning: Camera width/height not found or invalid in calibration data. Using default aspect ratio 1.0 for visualization."
+        )
+
+    # Define base half-dimensions based on scale and aspect ratio
+    y_half = scale * 0.5
+    x_half = y_half * aspect_ratio
+
     cam_points = np.array(
         [
-            [0, 0, 0],
-            [-scale * 0.5, -scale * 0.5, scale],
-            [scale * 0.5, -scale * 0.5, scale],
-            [scale * 0.5, scale * 0.5, scale],
-            [-scale * 0.5, scale * 0.5, scale],
+            [0, 0, 0],  # Apex (optical center)
+            [-x_half, -y_half, scale],  # Base corner 1
+            [x_half, -y_half, scale],  # Base corner 2
+            [x_half, y_half, scale],  # Base corner 3
+            [-x_half, y_half, scale],  # Base corner 4
         ]
     )
     pyramid_color = "red"
@@ -206,13 +226,16 @@ if __name__ == "__main__":
     visualize_extrinsics_camera_centered(
         calib_results_path=cam_calib_file,
         feature_data_path=cam_feature_file,
-        camera_scale=1.0,
-        point_size=5,
+        img_width=1280,
+        img_height=720,
     )
 
     proj_calib_file = results_dir / "Projector_calib_report.json"
     proj_feature_file = data_dir / "proj_feature_data.pkl"
 
     visualize_extrinsics_camera_centered(
-        calib_results_path=proj_calib_file, feature_data_path=proj_feature_file
+        calib_results_path=proj_calib_file,
+        feature_data_path=proj_feature_file,
+        img_width=768,
+        img_height=768,
     )

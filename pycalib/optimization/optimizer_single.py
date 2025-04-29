@@ -46,12 +46,12 @@ class Optimizer:
         logger.info(f"[__init__] Starting calibration for camera: {cam_name}")
         logger.info(f"[__init__] Image size: {self.params_guess.image_size}")
 
-        flags_dict = flags.to_dict()
+        flags_dict = flags.to_dict() if flags else {}
         self.optim_flags = {
-            "focal": flags_dict["focal"],
-            "principal_point": flags_dict["principal_point"],
-            "distortion": flags_dict["distortion"],
-            "extrinsics": flags_dict["extrinsics"],
+            "focal": flags_dict.get("focal", False),
+            "principal_point": flags_dict.get("principal_point", False),
+            "distortion": flags_dict.get("distortion", False),
+            "extrinsics": flags_dict.get("extrinsics", False),
         }
 
         self.image_size = self.params_guess.image_size
@@ -529,6 +529,12 @@ class Optimizer:
                     self.obj_pts_all_frames[frame]
                 ):
                     self.valid_frames.add(frame)
+        
+        # # remove data from frames with odd indices
+        # self.valid_frames = [frame for frame in self.valid_frames if frame % 2 == 0]
+        # for frame in self.valid_frames:
+        #     self.obj_pts_all_frames[frame] = self.obj_pts_all_frames[frame][::2]
+        #     self.img_pts_all_frames[frame] = self.img_pts_all_frames[frame][::2]
 
     def _filter_outliers(self):
         percentile_threshold = 70
