@@ -16,7 +16,11 @@ dependencies = [
     "deprecation>=2.1.0",
     "h5py>=3.13.0",
     "pyyaml>=6.0.2",
-    "numpy==1.26.4"
+    "numpy==1.26.4",
+    "pyqt6>=6.9.0",
+    "pyside2>=5.15.2.1",
+    "open3d>=0.19.0",
+    "pyvista>=0.45.0",
 ]
 
 [build-system]

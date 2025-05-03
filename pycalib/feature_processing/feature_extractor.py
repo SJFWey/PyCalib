@@ -104,32 +104,17 @@ class ImageProcessor:
 
     @staticmethod
     def load_image(image_path: Union[str, Path]) -> np.ndarray[np.uint8]:
-        """Load and preprocess an image from file.
+        path = Path(image_path)
+        if path.suffix == ".npy":
+            image = np.load(str(path)).copy()
+            if np.max(image) <= 1.0:
+                image = image * 255
+        else:
+            image = cv2.imread(str(path), cv2.IMREAD_GRAYSCALE)
+            if image is None:
+                raise ValueError(f"Failed to load image: {path}")
 
-        Args:
-            image_path: Path to image file (.jpg, .png, .npy)
-
-        Returns:
-            Image as uint8 numpy array
-
-        Raises:
-            ValueError: If image loading fails
-            Exception: For other loading/processing errors
-        """
-        try:
-            path = Path(image_path)
-            if path.suffix == ".npy":
-                image = np.load(str(path)).copy()
-                if np.max(image) <= 1.0:
-                    image = (image * 255).astype(np.uint8)
-            else:
-                image = cv2.imread(str(path), cv2.IMREAD_GRAYSCALE)
-                if image is None:
-                    raise ValueError(f"Failed to load image: {path}")
-
-            return image.astype(np.uint8)
-        except Exception as e:
-            print(f"Error loading image {image_path}: {str(e)}")
+        return image.astype(np.uint8)
 
 
 class FeatureDetector:

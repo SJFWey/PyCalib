@@ -5,6 +5,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Union
 
+import cv2
 import numpy as np
 from splib.calibration import stereoCalibration
 from splib.utils import configLoader
@@ -27,8 +28,8 @@ def load_config(cfg_file="debugging.yaml"):
     cfg_path = os.path.join("pycalib/configs", cfg_file)
     configLoader.loadProjectConfig(cfg_path)
     resource_manager = ResourceManager.getInstance()
-    CalShift = configLoader.initMeasurementClass(resource_manager["config"])
-    return CalShift
+    measure = configLoader.initMeasurementClass(resource_manager["config"])
+    return measure
 
 
 def load_images(folder_path):
@@ -358,7 +359,7 @@ def extract_features(
     if not image_folders.is_dir():
         raise NotADirectoryError(f"Path is not a directory: {image_folders}")
 
-    CalShift = load_config()
+    measure = load_config()
 
     ref_images_dict, calib_images_dict = load_images(image_folders)
 
@@ -367,7 +368,7 @@ def extract_features(
     proj_feature_data, masked_cam_feature_data, filtered_proj_feature_data = (
         extract_proj_features(
             cam_feature_data,
-            CalShift,
+            measure,
             calib_images_dict,
             radius=50,
             dense_thresh=0.5,

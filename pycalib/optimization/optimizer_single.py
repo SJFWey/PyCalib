@@ -391,6 +391,8 @@ class Optimizer:
         )
 
         return {
+            "cam_name": self.cam_name,
+            "image_size": self.image_size,
             "intrinsics": self.intrinsics,
             "extrinsics": self.extrinsics,
             "errors": self.error_report,
@@ -529,12 +531,6 @@ class Optimizer:
                     self.obj_pts_all_frames[frame]
                 ):
                     self.valid_frames.add(frame)
-        
-        # # remove data from frames with odd indices
-        # self.valid_frames = [frame for frame in self.valid_frames if frame % 2 == 0]
-        # for frame in self.valid_frames:
-        #     self.obj_pts_all_frames[frame] = self.obj_pts_all_frames[frame][::2]
-        #     self.img_pts_all_frames[frame] = self.img_pts_all_frames[frame][::2]
 
     def _filter_outliers(self):
         percentile_threshold = 70
