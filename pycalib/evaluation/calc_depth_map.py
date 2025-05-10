@@ -68,8 +68,58 @@ def generate_params_file(
     with open(proj_params_path, "rb") as f:
         proj_calib_result = pickle.load(f)
 
-    cam_params = extract_device_params(cam_calib_result)
-    proj_params = extract_device_params(proj_calib_result)
+    # Camera parameters (relative to itself: identity extrinsics)
+    cam_intrinsics_obj = cam_calib_result["intrinsics"]
+    cam_resolution = (1280, 720)
+    # Extrinsics for camera (identity rotation, zero translation)
+    cam_rvec_identity = np.zeros(3, dtype=np.float32)
+    cam_tvec_zero = np.zeros(3, dtype=np.float32)
+    cam_extrinsics_identity = Extrinsics(rvec=cam_rvec_identity, tvec=cam_tvec_zero)
+
+    cam_params_for_extraction = {
+        "image_size": cam_resolution,
+        "intrinsics": cam_intrinsics_obj,
+        "extrinsics": cam_extrinsics_identity,
+    }
+    cam_params = extract_device_params(cam_params_for_extraction)
+
+    # Projector parameters (relative to camera)
+    # Original extrinsics (World to Device)
+    rvec_cw = cam_calib_result[
+        "extrinsics"
+    ].rvec.flatten()  # World to Camera rotation vector
+    tvec_cw = (
+        cam_calib_result["extrinsics"].tvec.flatten().reshape(3, 1)
+    )  # World to Camera translation vector
+    R_cw, _ = cv2.Rodrigues(rvec_cw)  # World to Camera rotation matrix
+
+    rvec_pw = proj_calib_result[
+        "extrinsics"
+    ].rvec.flatten()  # World to Projector rotation vector
+    tvec_pw = (
+        proj_calib_result["extrinsics"].tvec.flatten().reshape(3, 1)
+    )  # World to Projector translation vector
+    R_pw, _ = cv2.Rodrigues(rvec_pw)  # World to Projector rotation matrix
+
+    # Calculate projector extrinsics relative to camera (Camera to Projector)
+    # R_pc = R_pw @ R_cw^T
+    # t_pc = t_pw - (R_pw @ R_cw^T @ t_cw)  which is t_pw - R_pc @ t_cw
+    R_pc = R_pw @ R_cw.T
+    t_pc_col = tvec_pw - (R_pc @ tvec_cw)
+
+    rvec_pc, _ = cv2.Rodrigues(R_pc)
+    tvec_pc = t_pc_col.flatten()
+
+    proj_intrinsics_obj = proj_calib_result["intrinsics"]
+    proj_resolution = (768, 768)
+    proj_extrinsics_relative = Extrinsics(rvec=rvec_pc.flatten(), tvec=tvec_pc)
+
+    proj_params_for_extraction = {
+        "image_size": proj_resolution,
+        "intrinsics": proj_intrinsics_obj,
+        "extrinsics": proj_extrinsics_relative,
+    }
+    proj_params = extract_device_params(proj_params_for_extraction)
 
     params_data = {
         "cams": {"cam": cam_params},
@@ -123,17 +173,18 @@ def load_images(folder_path: str):
 
 
 if __name__ == "__main__":
-    # params_file = Path("pycalib/configs/cam_params_depth_map.json")
-    # params_file_cv = Path("pycalib/configs/cam_params_depth_map_cv.json")
-    # if not params_file.exists():
-    #     generate_params_file()
-    # if not params_file_cv.exists():
-    #     generate_params_file(
-    #         cam_params_pkl="pycalib/data/cache/calib_result_Camera_cv.pkl",
-    #         proj_params_pkl="pycalib/data/cache/calib_result_Projector_cv.pkl",
-    #         output_json="pycalib/configs/cam_params_depth_map_cv.json",
-    #     )
+    params_file = Path("pycalib/configs/cam_params_depth_map.json")
+    params_file_cv = Path("pycalib/configs/cam_params_depth_map_cv.json")
+    if not params_file.exists():
+        generate_params_file()
+    if not params_file_cv.exists():
+        generate_params_file(
+            cam_params_pkl="pycalib/data/cache/calib_result_Camera_cv.pkl",
+            proj_params_pkl="pycalib/data/cache/calib_result_Projector_cv.pkl",
+            output_json="pycalib/configs/cam_params_depth_map_cv.json",
+        )
 
+    # ref_image, img_list = load_images("pycalib/data/image_sources/rad0/10")
     # ref_image, img_list = load_images("pycalib/data/image_sources/image_data_freq25/18")
     ref_image, img_list = load_images("pycalib/data/image_sources/images_sphere")
 

@@ -345,38 +345,38 @@ def evaluate():
     points3d_file = "pycalib/data/cache/hole10.npy"
     xyz_original = np.load(points3d_file)
 
-    interpolate(xyz_original, vis=False)
+    interpolate(xyz_original, vis=True)
 
-    num_evals = 1
-    all_depths = []
-    all_radii = []
+    # num_evals = 1
+    # all_depths = []
+    # all_radii = []
 
-    roi_parameters = {"xm": 0.2, "ym": 0.5, "a": 5}
-    ransac_parameters = {
-        "distance_thresh": 0.01,
-        "ransac_n": 3,
-        "num_iter": 1000,
-    }
+    # roi_parameters = {"xm": 0.2, "ym": 0.5, "a": 5}
+    # ransac_parameters = {
+    #     "distance_thresh": 0.01,
+    #     "ransac_n": 3,
+    #     "num_iter": 1000,
+    # }
 
-    for i in range(num_evals):
-        result = process_roi(xyz_original, roi_parameters, ransac_parameters)
+    # for i in range(num_evals):
+    #     result = process_roi(xyz_original, roi_parameters, ransac_parameters)
 
-        if result is not None:
-            depth, radius = result
-            all_depths.append(depth)
-            all_radii.append(radius)
-        else:
-            print(f"Evaluation {i + 1}: Failed or skipped.")
+    #     if result is not None:
+    #         depth, radius = result
+    #         all_depths.append(depth)
+    #         all_radii.append(radius)
+    #     else:
+    #         print(f"Evaluation {i + 1}: Failed or skipped.")
 
-    if all_depths:
-        valid_depths = np.array(all_depths)
-        valid_radii = np.array(all_radii)
-        print(f"Mean Depth: {np.mean(valid_depths):.4f}")
-        print(f"Std Dev Depth: {np.std(valid_depths):.4f}")
-        print(f"Mean Radius: {np.mean(valid_radii):.4f}")
-        print(f"Std Dev Radius: {np.std(valid_radii):.4f}")
-    else:
-        print("\nNo valid results obtained from any evaluation.")
+    # if all_depths:
+    #     valid_depths = np.array(all_depths)
+    #     valid_radii = np.array(all_radii)
+    #     print(f"Mean Depth: {np.mean(valid_depths):.4f}")
+    #     print(f"Std Dev Depth: {np.std(valid_depths):.4f}")
+    #     print(f"Mean Radius: {np.mean(valid_radii):.4f}")
+    #     print(f"Std Dev Radius: {np.std(valid_radii):.4f}")
+    # else:
+    #     print("\nNo valid results obtained from any evaluation.")
 
 
 if __name__ == "__main__":
